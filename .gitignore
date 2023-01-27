@@ -1,0 +1,14 @@
+Saved/
+Intermediate/
+Binaries/
+Build/
+DerivedDataCache/
+
+Plugins/*/Intermediate/
+Plugins/*/Saved/
+Plugins/*/Binaries/
+Plugins/*/DerivedDataCache/
+Plugins/*/Build/
+
+QualityTesting.sln
+

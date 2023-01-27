@@ -1,0 +1,56 @@
+{
+	"FileVersion" : 3,
+	"Version" : 1,
+	"VersionName" : "5.0.3-r.5",
+	"FriendlyName" : "Wave VR",
+	"Description" : "Support various VR features and enable android application to run on VIVE mobile devices. Make sure other VR plugins are disabled.",
+	"Category" : "Virtual Reality",
+	"CreatedBy" : "hTC Corporation.",
+	"CreatedByURL" : "http://htc.com",
+	"DocsURL" : "https://hub.vive.com/storage/docs/en-us/UnrealPlugin/UnrealPlugin.html",
+	"MarketplaceURL" : "",
+	"SupportURL" : "https://developer.vive.com/tw/support/",
+	"EnabledByDefault" : true,
+	"CanContainContent": true,
+	"IsBetaVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "WaveVR",
+			"Type": "Runtime",
+			"LoadingPhase": "PostConfigInit",
+			"WhitelistPlatforms": [ "Android", "Win64" ],
+			"AdditionalDependencies": [ "ProceduralMeshComponent" ]
+		},
+		{
+			"Name": "WaveVRInput",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"WhitelistPlatforms": [ "Android", "Win64" ]
+		},
+		{
+			"Name": "WaveVREditor",
+			"Type": "UncookedOnly",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "WaveVREyeTracker",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"WhitelistPlatforms": [ "Android", "Win64" ]
+		},
+		{
+			"Name": "WaveVRHandTracker",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"WhitelistPlatforms": [ "Android", "Win64" ]
+		}
+	],
+	"Plugins":
+	[
+		{
+			"Name": "ProceduralMeshComponent",
+			"Enabled": true
+		}
+	]
+}

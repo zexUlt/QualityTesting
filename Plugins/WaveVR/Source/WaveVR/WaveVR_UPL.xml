@@ -1,0 +1,383 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--WaveVR plugin additions-->
+<root xmlns:android="http://schemas.android.com/apk/res/android">
+	<init>
+		<log text="WaveVR init"/>
+		<setBool result="bWaveVRSupported" value="false"/>
+		<isArch arch="armeabi-v7a">
+			<log text="WaveVR is supported on this build arm-v7a!!" />
+			<setBool result="bWaveVRSupported" value="true"/>
+		</isArch>
+		<isArch arch="arm64-v8a">
+			<log text="WaveVR is supported on this build arm64-v8a!" />
+			<setBool result="bWaveVRSupported" value="true"/>
+		</isArch>
+		<setBoolFromProperty result="bHandTrackingEnabled" ini="Engine" section="/Script/WaveVREditor.WaveVRSettings" property="wvr.HandTracking.enable" default="false"/>
+		<setBoolFromProperty result="bTrackerEnabled" ini="Engine" section="/Script/WaveVREditor.WaveVRSettings" property="wvr.Tracker.enable" default="false"/>
+		<setBoolFromProperty result="bSimultaneousInteractionEnabled" ini="Engine" section="/Script/WaveVREditor.WaveVRSettings" property="wvr.SimultaneousInteraction.enable" default="false"/>
+		<setBoolFromProperty result="bEyeTrackingEnable" ini="Engine" section="/Script/WaveVREditor.WaveVRSettings" property="wvr.EyeTracking.enable" default="false"/>
+		<setBoolFromProperty result="bLipExpressionEnabled" ini="Engine" section="/Script/WaveVREditor.WaveVRSettings" property="wvr.LipExpression.enable" default="false"/>
+		<setStringFromProperty result="SupportedFPS" ini="Engine" section="/Script/WaveVREditor.WaveVRSettings" property="wvr.SupportedFPS" default="0"/>
+		<setBoolIsEqual result="bIsSupportedFPS120" arg1="$S(SupportedFPS)" arg2="120"/>
+	</init>
+
+	<androidManifestUpdates>
+		<if condition="bWaveVRSupported">
+			<true>
+				<loopElements tag="application">
+					<!--addAttribute tag="$" name="android:theme" value="@style/Theme.WaveVR.Loading" /-->
+					<addAttribute tag="$" name="android:requestLegacyExternalStorage" value="true" />
+					<!--addAttribute tag="$" name="tools:replace" value="android:theme" /-->
+					<if condition="bIsSupportedFPS120">
+						<true>
+							<addElements tag="$">
+								<meta-data android:name="com.htc.vr.content.SupportedFPS" android:value="120" />
+							</addElements>
+						</true>
+					</if>
+				</loopElements>
+				<loopElements tag="activity">
+					<setStringFromAttribute result="activityName" tag="$" name="android:name"/>
+					<setBoolIsEqual result="bSplashActivity" arg1="$S(activityName)" arg2="com.epicgames.ue4.SplashActivity"/>
+					<if condition="bSplashActivity">
+						<true>
+							<!-- add WVR category to intent-filter when the intent-filter exist -->
+							<setElement result="intentInfo" value="category"/>
+							<addAttribute tag="$intentInfo" name="android:name" value="com.htc.intent.category.VRAPP"/>
+							<addElement tag="intent-filter" name="intentInfo"/>
+						</true>
+					</if>
+					<setBoolIsEqual result="bGameActivity" arg1="$S(activityName)" arg2="com.epicgames.ue4.GameActivity"/>
+					<if condition="bGameActivity">
+						<true>
+						<!-- add WVR category to intent-filter when the intent-filter not exist -->
+							<addElements tag="$">
+								<intent-filter>
+									<action android:name="android.intent.action.MAIN" />
+									<category android:name="com.htc.intent.category.VRAPP" />
+								</intent-filter>
+							</addElements>
+							<addAttribute tag="$" name="android:theme" value="@style/Theme.WaveVR.Black" />
+							<addAttribute tag="$" name="android:enableVrMode" value="@string/wvr_vr_mode_component" />
+							<addAttribute tag="$" name="android:configChanges" value="density|fontScale|keyboard|keyboardHidden|layoutDirection|locale|mnc|mcc|navigation|orientation|screenLayout|screenSize|smallestScreenSize|uiMode|touchscreen" />
+							<if condition="bIsSupportedFPS120">
+								<true>
+									<!-- Unreal will force to set resizeableActivity as false when android sdk level >= 24. See UEDeployAndroid.cs -->
+									<removeAttribute tag="$" name="android:resizeableActivity" />
+								</true>
+							</if>
+						</true>
+					</if>
+				</loopElements>
+				<!--Permissions which required for WaveVR SDK.-->
+				<addFeature android:name="android.software.vr.mode" />
+				<addFeature android:name="android.hardware.vr.high_performance" />
+                                <if condition="bHandTrackingEnabled">
+                                        <true>
+                                                <addFeature android:name="wave.feature.handtracking" android:required="true"/>
+                                        </true>
+                                </if>
+                                <if condition="bTrackerEnabled">
+                                        <true>
+                                                <addFeature android:name="wave.feature.tracker" android:required="true"/>
+                                        </true>
+                                </if>
+				                <if condition="bSimultaneousInteractionEnabled">
+                                        <true>
+                                                <addFeature android:name="wave.feature.simultaneous_interaction" android:required="true"/>
+                                        </true>
+                                </if>
+                                <if condition="bEyeTrackingEnable">
+                                        <true>
+                                                <addFeature android:name="wave.feature.eyetracking" android:required="true"/>
+                                        </true>
+                                </if>
+                                <if condition="bLipExpressionEnabled">
+                                        <true>
+                                                <addFeature android:name="wave.feature.lipexpression" android:required="true"/>
+                                        </true>
+                                </if>
+				<!--<addFeature android:name="android.hardware.camera" />-->
+			</true>
+		</if>
+	</androidManifestUpdates>
+
+	<prebuildCopies>
+		<copyDir src="$S(PluginDir)/java" dst="$S(BuildDir)/src" />
+		<copyDir src="$S(ProjectDir)/Source/java" dst="$S(BuildDir)/src" />
+	</prebuildCopies>
+
+	<resourceCopies>
+		<isArch arch="armeabi-v7a">
+			<copyFile src="$S(PluginDir))/../WVR/lib/android/armeabi-v7a/libcamerautility.so"
+				dst="$S(BuildDir)/libs/armeabi-v7a/libcamerautility.so" />
+		</isArch>
+		<isArch arch="arm64-v8a">
+			<copyFile src="$S(PluginDir))/../WVR/lib/android/arm64-v8a/libcamerautility.so"
+				dst="$S(BuildDir)/libs/arm64-v8a/libcamerautility.so" />
+		</isArch>
+	</resourceCopies>
+
+	<proguardAdditions>
+		<insert>
+-dontwarn com.htc.vr.**
+-dontwarn kotlinx.**
+-keep class com.htc.vr.** { *; }
+-keep class com.htc.vrm.** { *; }
+-keep class com.htc.packageinstallerforvr.** { *; }
+-keep class vive.wave.vr.** { *; }
+-keep class com.qualcomm.svrapi.** { *; }
+		</insert>
+	</proguardAdditions>
+
+	<!-- optional libraries to load in GameActivity.java before libUE4.so
+	<soLoadLibrary>
+	</soLoadLibrary>
+	-->
+
+	<!-- optional additions to the GameActivity imports in GameActivity.java-->
+	<gameActivityImportAdditions>
+		<insert>
+			import com.htc.vr.sdk.VRActivityDelegate;
+
+			<!-- for PermissionManager -->
+			import com.htc.vr.permission.client.PermissionManager;
+			import com.htc.vr.permission.client.PermissionCallback;
+			import com.htc.vr.permission.client.GrantedResult;
+			import com.htc.vr.unreal.PermissionWrapper;
+			import android.content.pm.PackageManager;
+			<!-- for ResourceWrapper -->
+			import com.htc.vr.unreal.ResourceWrapper;
+
+			<!-- for ContentProvider -->
+			import com.htc.vr.unreal.ContentProvider;
+
+			import com.htc.vr.unreal.FileUtils;
+			import com.htc.vr.unreal.OEMConfig;
+			import com.htc.vr.unreal.SoftwareIpd;
+			import com.htc.vr.unreal.VRTransitionBroadcastReceiver;
+		</insert>
+	</gameActivityImportAdditions>
+
+	<!-- optional additions to the GameActivity class in GameActivity.java -->
+	<gameActivityClassAdditions>
+		<insert>
+			private static VRActivityDelegate mVRActivityDelegate;
+			private PermissionManager mPM = null;
+			private ResourceWrapper mRW = null;
+			private ContentProvider mCP = null;
+			private FileUtils mFU = null;
+			private SoftwareIpd mSIPD = null;
+			private static GameActivity mInstance = null;
+			private PermissionWrapper mPW = null;
+			private PermissionCallback mPermissionCallback = null;
+			private OEMConfig mOEMConfig = null;
+			private VRTransitionBroadcastReceiver mVRTransitionBR = null;
+
+			///@Override
+			///public void setRequestedOrientation(int requestedOrientation) {
+			///    Log.debug("[WaveVR_UPL Override] setRequestedOrientation()!");
+			///    mVRActivityDelegate.setRequestedOrientation(requestedOrientation);
+			///}
+
+			@Override
+			public void onWindowFocusChanged(boolean hasFocus) {
+				Log.debug("[WaveVR_UPL Override] onWindowFocusChanged()!");
+				mVRActivityDelegate.onWindowFocusChanged(hasFocus);
+				super.onWindowFocusChanged(hasFocus);
+			}
+
+			public VRActivityDelegate getVRInstance() {
+				if ( mVRActivityDelegate == null ) {
+					mVRActivityDelegate = new VRActivityDelegate (Get());
+				}
+				return mVRActivityDelegate;
+			}
+
+			@Override
+			public void onLowMemory() {
+				Log.debug("[WaveVR_UPL Override] onLowMemory()!");
+				mVRActivityDelegate.onLowMemory();
+				super.onLowMemory();
+			}
+
+			@Override
+			public boolean dispatchKeyEvent(KeyEvent event) {
+				Log.debug("[WaveVR_UPL Override] dispatchKeyEvent()!");
+				//Do not dispatchKeyEvent to android framework!
+				mVRActivityDelegate.dispatchKeyEvent(event);
+				return true;
+			}
+
+			// Let WVR be identified as OculusMobile can avoid to modify the UE.
+			// The OculusMobile's render initializtions are necessary for WaveVR.
+			public boolean AndroidThunkJava_IsOculusMobileApplication()
+			{
+				return true;
+			}
+
+			public static GameActivity getInstance() {
+				Log.debug("getInstance");
+				return mInstance;
+			}
+
+			/*
+			@Override
+			public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+				Log.debug("[WaveVR_UPL Override] onRequestPermissionResult()!");
+				if(mPermissionCallback!= null){
+					boolean[] mResultArray = new boolean[permissions.length];
+					for(int i=0;i &lt; permissions.length;i++){
+						mResultArray[i] = false;
+						mResultArray[i] = (grantResults[i] == PackageManager.PERMISSION_GRANTED);
+					}
+					mPermissionCallback.onRequestCompletedwithObject(new GrantedResult(permissions, mResultArray));
+				}
+			}
+			*/
+
+			public void setRequestPermissionCallback(final PermissionCallback cb){
+				Log.debug("setRequestPermissionCallback");
+				mPermissionCallback = cb;
+			}
+		</insert>
+	</gameActivityClassAdditions>
+
+	<!-- optional additions to GameActivity onCreate in GameActivity.java-->
+	<gameActivityOnCreateAdditions>
+		<insert>
+			Log.debug("[WaveVR_UPL Additions] OnCreate()!");
+			getVRInstance();
+			mVRActivityDelegate.setCustomContextSurfaceType(/*RenderBase.UNREAL_CUSTOM_CONTEXTSURFACE_TYPE*/3);
+			mVRActivityDelegate.onCreate(savedInstanceState);
+			Log.debug("!!!remove MySurfaceView view from containerFrameLayout!!!");
+			containerFrameLayout.removeView(MySurfaceView);
+			mVRActivityDelegate.setVRPresentView(MySurfaceView);
+			<!--for Permission Manager-->
+			mPM = PermissionManager.getInstance();
+			mPM.setActivity(this);
+			mPM.setPackageName(getApplicationContext().getPackageName());
+
+			<!--for ResourceWrapper-->
+			mRW = ResourceWrapper.getInstance();
+			mRW.setContext(getApplicationContext());
+			mRW.setPackageName(getApplicationContext().getPackageName());
+
+			<!--for ContentProvider-->
+			mCP = ContentProvider.getInstance();
+			mCP.setContext(getApplicationContext());
+
+			mInstance = this;
+
+			mFU = FileUtils.getInstance();
+			mFU.setContext(getApplicationContext());
+
+
+			mSIPD = SoftwareIpd.getInstance();
+			mSIPD.setContext(getApplicationContext());
+
+			mPW = PermissionWrapper.getInstance();
+			mOEMConfig = OEMConfig.getInstance();
+            mOEMConfig.setContext(getApplicationContext());
+			mOEMConfig.setDelegate(mVRActivityDelegate);
+
+			mVRTransitionBR = VRTransitionBroadcastReceiver.getInstance();
+		</insert>
+	</gameActivityOnCreateAdditions>
+
+	<!-- optional additions to GameActivity onDestroy in GameActivity.java-->
+	<gameActivityOnDestroyAdditions>
+		<insert>
+            mOEMConfig.onDestroy();
+			Log.debug("[WaveVR_UPL Additions] OnDestroy()!");
+			//Here won't be called! UE's behavior (may wrong!) [UE4.21]
+			Log.debug("[UE4.21] gameActivityOnDestroyAdditions will not be called no matter QuitGame or finish(), the behavior become normal if this line shows");
+			mPM.release();  //mVRActivityDelegate.onDestroy() will kill process.
+			mVRTransitionBR.onDestroy();
+			mVRActivityDelegate.onDestroy();
+		</insert>
+	</gameActivityOnDestroyAdditions>
+
+	<!-- optional additions to GameActivity onStart in GameActivity.java-->
+	<gameActivityOnStartAdditions>
+		<insert>
+			Log.debug("[WaveVR_UPL Additions] onStart()!");
+			mVRActivityDelegate.onStart();
+		</insert>
+	</gameActivityOnStartAdditions>
+
+	<!-- optional additions to GameActivity onStop in GameActivity.java-->
+	<gameActivityOnStopAdditions>
+		<insert>
+			Log.debug("[WaveVR_UPL Additions] onStop()!");
+			mVRActivityDelegate.onStop();
+			if (isFinishing()) {
+				Log.debug("Activity isFinishing(), call which GameActivity.onDestroy() would call because it won't be called while finish()!");
+				mPM.release();  //mVRActivityDelegate.onDestroy() will kill process.
+				mVRActivityDelegate.onDestroy();
+			}
+		</insert>
+	</gameActivityOnStopAdditions>
+
+	<!-- optional additions to GameActivity onPause in GameActivity.java-->
+	<gameActivityOnRequestPermissionsResultAdditions>
+		<insert>
+			Log.debug("[WaveVR_UPL Additions] onRequestPermissionsResult()!");
+			if(mPermissionCallback!= null){
+				boolean[] mResultArray = new boolean[permissions.length];
+				for(int i=0;i &lt; permissions.length;i++){
+					mResultArray[i] = false;
+					mResultArray[i] = (grantResults[i] == PackageManager.PERMISSION_GRANTED);
+				}
+				mPermissionCallback.onRequestCompletedwithObject(new GrantedResult(permissions, mResultArray));
+			}
+		</insert>
+	</gameActivityOnRequestPermissionsResultAdditions>
+
+	<!-- optional additions to GameActivity onPause in GameActivity.java-->
+	<gameActivityOnPauseAdditions>
+		<insert>
+			Log.debug("[WaveVR_UPL Additions] onPause()!");
+			mVRActivityDelegate.onPause();
+			<!--for Permission Manager-->
+			mPM.onPauseAndReturnFail();
+			if (isFinishing()) {
+				Log.debug("Activity isFinishing()!");
+			}
+		</insert>
+	</gameActivityOnPauseAdditions>
+
+	<!-- optional additions to GameActivity onResume in GameActivity.java-->
+	<gameActivityOnResumeAdditions>
+		<insert>
+			Log.debug("[WaveVR_UPL Additions] onResume()!");
+			mOEMConfig.onResume();
+			mVRActivityDelegate.onResume();
+			<!--for Permission Manager-->
+			mPM.onResume();
+			<!--Workaround to prevent restarting application.-->
+			nativeOnInitialDownloadStarted();
+		</insert>
+	</gameActivityOnResumeAdditions>
+
+	<!-- optional additions to GameActivity onActivityResult in GameActivity.java
+	<gameActivityOnActivityResultAdditions>
+		<insert>
+		</insert>
+	</gameActivityOnActivityResultAdditions>
+	-->
+	<buildGradleAdditions>
+		<insert>
+			repositories {
+				maven {
+					url "${OUTPUT_PATH}/../../Plugins/WaveVR/Source/WVR/lib/android/repository"
+				}
+			}
+			dependencies {
+				implementation 'com.htc.vr:wvr_client:+'
+				implementation 'com.htc.vr:wvr_permission_client:+'
+				implementation 'com.htc.vr:wvr_resource:+'
+			}
+		</insert>
+	</buildGradleAdditions>
+</root>

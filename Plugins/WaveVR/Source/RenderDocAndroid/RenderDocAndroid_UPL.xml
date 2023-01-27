@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root xmlns:android="http://schemas.android.com/apk/res/android">
+	<init>
+		<setBoolFromProperty result="bRenderDoc" ini="Engine" section="/Script/WaveVREditor.WaveVRSettings" property="wvr.RenderDoc.enable" default="false"/>
+	</init>
+
+	<resourceCopies>
+		<if condition="bRenderDoc">
+			<true>
+				<log text="RenderDocAndroid is included"/>
+				<isArch arch="armeabi-v7a">
+					<copyFile src="$S(PluginDir)/lib/android/armeabi-v7a/libVkLayer_GLES_RenderDoc.so"
+						dst="$S(BuildDir)/libs/armeabi-v7a/libVkLayer_GLES_RenderDoc.so" />
+				</isArch>
+				<isArch arch="arm64-v8a">
+					<copyFile src="$S(PluginDir)/lib/android/arm64-v8a/libVkLayer_GLES_RenderDoc.so"
+						dst="$S(BuildDir)/libs/arm64-v8a/libVkLayer_GLES_RenderDoc.so" />
+				</isArch>
+			</true>
+			<false>
+				<log text="RenderDocAndroid is not included"/>
+			</false>
+		</if>
+	</resourceCopies>
+
+	<soLoadLibrary>
+		<loadLibrary name="VkLayer_GLES_RenderDoc" failmsg="RenderDoc library does not exist." />
+	</soLoadLibrary>
+</root>
